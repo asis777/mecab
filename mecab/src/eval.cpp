@@ -60,7 +60,7 @@ class Eval {
                          std::vector<int> *level) {
     scoped_fixed_array<char, BUF_SIZE> buf;
     scoped_fixed_array<char *, 512> col;
-    std::strncpy(buf.get(), level_str, buf.size());
+    std::strncpy(buf.get(), level_str, buf.size() - 1);
     level->clear();
     size_t n = tokenize2(buf.get(), "\t ", col.get(), col.size());
     for (size_t i = 0; i < n; ++i) {
