@@ -22,9 +22,6 @@ char *mystrdup(const char *str) {
   return r;
 }
 
-char *mystrdup(const std::string &str) {
-  return mystrdup(str.c_str());
-}
 }  // namespace
 
 bool EncoderLearnerTagger::open(Tokenizer<LearnerNode, LearnerPath> *tokenizer,
