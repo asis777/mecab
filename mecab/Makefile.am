@@ -3,7 +3,7 @@
 # $Id: Makefile.am,v 1.7 2006/05/29 15:36:08 taku-ku Exp $;
 #
 @SET_MAKE@
-AUTOMAKE_OPTIONS = 1.4 no-dependencies
+AUTOMAKE_OPTIONS = 1.16.5 no-dependencies
 SUBDIRS = src man doc tests
 confdir = $(sysconfdir)
 conf_DATA = mecabrc

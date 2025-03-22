@@ -1,7 +1,9 @@
-AC_INIT(matrix.def)
-AM_INIT_AUTOMAKE(mecab-ipadic, 2.7.0-20070801)
+AC_INIT([mecab-ipadic], [2.7.0-20070801])
+AC_CONFIG_SRCDIR([matrix.def])
+AM_INIT_AUTOMAKE
 AC_PROG_INSTALL
 AC_SUBST(datarootdir)       
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_ARG_WITH(
     dicdir,
@@ -53,4 +55,5 @@ AC_SUBST(MECAB_GENDATA)
 MECAB_PREDATA="`echo *.def` dicrc"
 AC_SUBST(MECAB_PREDATA)
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

@@ -1,9 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(src/mecab.cpp)
+AC_INIT([mecab],[0.996])
 AH_TEMPLATE([HAVE_GCC_ATOMIC_OPS], [])
 AH_TEMPLATE([HAVE_OSX_ATOMIC_OPS], [])
 AH_TEMPLATE([HAVE_TLS_KEYWORD], [])
-AM_INIT_AUTOMAKE(mecab, 0.996)
+AC_CONFIG_SRCDIR([src/mecab.cpp])
+AM_INIT_AUTOMAKE
 AC_CONFIG_MACRO_DIR([m4])
 
 # DIC_VERSION XXYY
@@ -25,14 +26,25 @@ AC_PROG_CXX
 AC_PROG_GCC_TRADITIONAL
 AC_PROG_MAKE_SET
 AC_LIBTOOL_WIN32_DLL
-AM_PROG_LIBTOOL
-AC_ISC_POSIX
+
+LT_INIT([win32-dll])
+AC_SEARCH_LIBS([strerror],[cposix])
 AC_C_BIGENDIAN
-AC_CYGWIN
+AC_CANONICAL_HOST
+case $host_os in
+  *cygwin* ) CYGWIN=yes;;
+	 * ) CYGWIN=no;;
+esac
+
 AM_ICONV
-AC_LANG_CPLUSPLUS
+AC_LANG([C++])
 AC_LANG(C)
-AC_HEADER_STDC
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_GREP
+EGREP="$GREP -E"
+
 AC_C_CONST
 AC_C_BIGENDIAN
 AC_CHECK_HEADERS(string.h stdlib.h unistd.h fcntl.h stdint.h \
@@ -107,19 +119,24 @@ AC_SUBST(CHARSET)
 dnl
 dnl check C++ features
 dnl
-AC_DEFUN(CHECK_CXX_STL, [
+AC_DEFUN([CHECK_CXX_STL], [
   AC_MSG_CHECKING(if ${CXX-c++} supports stl <$1> (required))
-  AC_TRY_COMPILE(
-	[
-	  #include <$1>
-	], [
-	;
-	], [
+  AC_COMPILE_IFELSE(
+    [
+      AC_LANG_SOURCE([
+        #include <$1>
+        ]
+	  )
+	],
+    [
 	  ac_stl_$1=yes
-	], [
+	],
+	[
 	  config_error=yes
-	  AC_WARN(${CXX-c++} stl <$1> does not work)
-        ])
+	  #AC_WARN([${CXX-c++} stl <$1> does not work])
+	  m4_warn([portability], ["\${CXX-c++} stl <$1> does not work"])
+	]
+  )
   AC_MSG_RESULT([$ac_stl_$1])
 ])
 
@@ -137,77 +154,76 @@ CHECK_CXX_STL(fstream)
 
 # check for const_cast
 AC_MSG_CHECKING([if ${CXX-c++} supports template <class T> (required)])
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
    template <class T> T foo (T &i) { return i++; };
-],[
+]], [[
    int i = 0;
    double d = 0.0;
    foo(i); foo(d);
-],[
+]])],[
   ac_template=yes
 ],[
-  AC_WARN(${CXX-c++} template <class T> does not work)
+  #AC_WARN(${CXX-c++} template <class T> does not work)
+  m4_warn([portability], ["${CXX-c++} template <class T> does not work"])
   config_error=yes
 ])
 AC_MSG_RESULT([$ac_template])
 
 # check for const_cast
 AC_MSG_CHECKING([if ${CXX-c++} supports const_cast<> (required)])
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
    class foo;
-],[
+]], [[
    const foo *c=0;
    foo *c1=const_cast<foo*>(c);
-],[
+]])],[
   ac_const_cast=yes
 ],[
-  AC_WARN(${CXX-c++} const_cast<> does not work)
+  #AC_WARN(${CXX-c++} const_cast<> does not work)
+  m4_warn([portability], ["${CXX-c++} const_cast<> does not work"])
   config_error=yes
 ])
 AC_MSG_RESULT([$ac_const_cast])
 
 # check for static_cast<>
 AC_MSG_CHECKING(if ${CXX-c++} supports static_cast<> (required))
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
    class foo;
-],[
+]], [[
    foo *c = 0;
    void *c1 = static_cast<void *>(c);
-],[
+]])],[
   ac_static_cast=yes
 ],[
-  AC_WARN(${CXX-c++} static_cast<> does not work)
+  #AC_WARN(${CXX-c++} static_cast<> does not work)
+  m4_warn([portability], ["${CXX-c++} static_cast<> does not work"])
   config_error=yes
 ])
 AC_MSG_RESULT([$ac_static_cast])
 
 # check for reinterpret_cast
 AC_MSG_CHECKING(if ${CXX-c++} supports reinterpret_cast<> (required))
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
   int *a = 0;
-],[
+]], [[
    char *p = reinterpret_cast<char *>(a);
-],[
+]])],[
   ac_reinterpret_cast=yes
 ],[
-  AC_WARN(${CXX-c++} reinterpret_cast<> does not work)
+  #AC_WARN(${CXX-c++} reinterpret_cast<> does not work)
+  m4_warn([portability], ["${CXX-c++} reinterpret_cast<> does not work"])
   config_error=yes
 ])
 AC_MSG_RESULT([$ac_reinterpret_cast])
 
 # check for namespaces
 AC_MSG_CHECKING(if ${CXX-c++} supports namespaces (required) )
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 namespace Foo { struct A {}; }
 using namespace Foo;
-],[
+]], [[
 A a;
-],[
+]])],[
  ac_namespaces=yes
 dnl AC_DEFINE(HAVE_CXX_NAMESPACE)
 ],[
@@ -218,12 +234,11 @@ AC_MSG_RESULT([$ac_namespaces])
 
 dnl __thread keyword
 AC_MSG_CHECKING([if ${CXX-c++} supports __thread (optional)])
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 __thread int a = 0;
-],[
+]], [[
   a = 10;
-],[
+]])],[
  enable_tls=yes
 ],[
  enable_tls=no
@@ -238,31 +253,30 @@ AC_DEFINE([HAVE_TLS_KEYWORD])
 fi
 
 AC_MSG_CHECKING([if ${CXX-c++} supports template <class T> (required)])
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
    template <class T> T foo (T &i) { return i++; };
-],[
+]], [[
    int i = 0;
    double d = 0.0;
    foo(i); foo(d);
-],[
+]])],[
   ac_template=yes
 ],[
-  AC_WARN(${CXX-c++} template <class T> does not work)
+  #AC_WARN(${CXX-c++} template <class T> does not work)
+  m4_warn([portability], ["${CXX-c++} template <class T> does not work"])
   config_error=yes
 ])
 AC_MSG_RESULT([$ac_template])
 
 AC_MSG_CHECKING([if ${CXX-c++} supports GCC native atomic operations (optional)])
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sched.h>
-],[
+]], [[
   int a = 10;
   __sync_fetch_and_add(&a, 10);
   __sync_val_compare_and_swap(&a, 0, 10);
   sched_yield();
-],[
+]])],[
   enable_gcc_atomic_ops=yes
 ],[
   enable_gcc_atomic_ops=no
@@ -273,14 +287,13 @@ AC_DEFINE([HAVE_GCC_ATOMIC_OPS])
 fi
 
 AC_MSG_CHECKING([if ${CXX-c++} supports OSX native atomic operations (optional)])
-AC_TRY_COMPILE(
-[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <libkern/OSAtomic.h>
-],[
+]], [[
   int a = 10;
   OSAtomicAdd32(10, &a);
   OSAtomicCompareAndSwapInt(10, 0, &a);
-],[
+]])],[
   enable_osx_atomic_ops=yes
 ],[
   enable_osx_atomic_ops=no
@@ -313,8 +326,8 @@ AC_SUBST(MECAB_DEFAULT_RC)
 AC_SUBST(datarootdir)
 AC_SUBST(DIC_VERSION)
 
-AM_CONFIG_HEADER(config.h)
-AC_OUTPUT([
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([
             Makefile
 	    src/Makefile
 	    src/Makefile.msvc
@@ -324,7 +337,8 @@ AC_OUTPUT([
 	    swig/version.h
 	    mecab.iss
 	    mecab-config
-	    mecabrc ],
-	    chmod +x mecab-config \
-	    )
+	    mecabrc ])
+AC_CONFIG_COMMANDS([default],[chmod +x mecab-config \
+	    ],[])
+AC_OUTPUT
 
